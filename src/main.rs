@@ -24,7 +24,7 @@ fn ray_color(r: &Ray, world: &World, depth: u64) -> Color {
     if let Some(rec) = world.hit(r, 0.001, f64::INFINITY) {
         //hit
         if let Some((attenuation, scattered)) = rec.material.scatter(r, &rec) {
-            0.25 * attenuation + 0.75 * ray_color(&scattered, world, depth - 1)
+            attenuation * ray_color(&scattered, world, depth - 1)
         } else {
             Color::new(0.0, 0.0, 0.0)
         }
