@@ -22,4 +22,7 @@ impl Ray {
     pub fn at(self, t: f64) -> Vec3 {
         self.orig + self.dir * t
     }
+    pub fn reflect(self, n: Vec3) -> Vec3 {
+        self.direction() - 2.0 * self.direction().dot(n) * n
+    }
 }
