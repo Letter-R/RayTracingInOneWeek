@@ -16,8 +16,9 @@ fn ray_color(r: &Ray, world: &World, depth: u64) -> Color {
         return Color::new(0.0, 0.0, 0.0);
     }
     //hit
-    if let Some(rec) = world.hit(r, 0.0, f64::INFINITY) {
-        let target = rec.p + rec.normal + Vec3::random_in_unit_sphere();
+    if let Some(rec) = world.hit(r, 0.001, f64::INFINITY) {
+        let target = rec.p + Vec3::random_in_hemisphere(rec.normal);
+        //let target = rec.p + rec.normal + Vec3::random_in_unit_sphere().normalized();
         let r = Ray::new(rec.p, target - rec.p);
         0.5 * ray_color(&r, world, depth - 1)
     } else {
@@ -57,13 +58,12 @@ fn main() {
         );
         stderr().flush().unwrap(); //flush empty cache
         for i in 0..IMAGE_WIDTH {
-            //先从左到右输出行，再从上到下输出列
-            //以左下为（0，0）,红色正比于x,绿色正比于y
             // for each pixel, do this:
             let mut pixel_color = Color::new(0.0, 0.0, 0.0);
             for _ in 0..SAMPLES_PER_PIXEL {
                 let random_u: f64 = rng.gen(); //[0,1)
                 let random_v: f64 = rng.gen();
+
                 let u = ((i as f64) + random_u) / ((IMAGE_WIDTH - 1) as f64);
                 let v = ((j as f64) + random_v) / ((IMAGE_HEIGHT - 1) as f64);
 
