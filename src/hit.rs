@@ -20,7 +20,7 @@ impl HitRecord {
         if self.front_face {
             self.normal = outward_normal;
         } else {
-            self.normal = -0.1 * outward_normal;
+            self.normal = -1.0 * outward_normal;
         }
     }
 }
