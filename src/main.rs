@@ -15,7 +15,10 @@ use ray::Ray;
 use sphere::Sphere;
 use vec::{Color, Point3};
 
-use crate::material::{Dielectric, Lambertian, Metal};
+use crate::{
+    material::{Dielectric, Lambertian, Metal},
+    vec::Vec3,
+};
 fn ray_color(r: &Ray, world: &World, depth: u64) -> Color {
     //max depth, set black
     if depth <= 0 {
@@ -45,6 +48,7 @@ fn main() {
     const SAMPLES_PER_PIXEL: u64 = 100;
     const MAX_DEPTH: u64 = 10;
     //World
+    let r: f64 = (std::f64::consts::PI / 4.0).cos();
     let mut world = World::new();
 
     let mat_ground = Rc::new(Lambertian::new(Color::new(0.8, 0.8, 0.0)));
@@ -56,7 +60,7 @@ fn main() {
     let sphere_ground = Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, mat_ground);
     let sphere_center = Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, mat_center);
     let sphere_left = Sphere::new(Point3::new(-1.0, 0.0, -1.0), 0.5, mat_left);
-    let sphere_left_inner = Sphere::new(Point3::new(-1.0, 0.0, -1.0), -0.4, mat_left_inner);
+    let sphere_left_inner = Sphere::new(Point3::new(-1.0, 0.0, -1.0), -0.45, mat_left_inner);
     let sphere_right = Sphere::new(Point3::new(1.0, 0.0, -1.0), 0.5, mat_right);
 
     world.push(Box::new(sphere_ground));
@@ -65,8 +69,14 @@ fn main() {
     world.push(Box::new(sphere_left_inner));
     world.push(Box::new(sphere_right));
 
-    //Camera
-    let camera = Camera::new();
+    // Camera
+    let cam = Camera::new(
+        Point3::new(-2.0, 2.0, 1.0),
+        Point3::new(0.0, 0.0, -1.0),
+        Vec3::new(0.0, 1.0, 0.0),
+        20.0,
+        ASPECT_RATIO,
+    );
 
     //photo
     println!("P3");
@@ -90,7 +100,7 @@ fn main() {
                 let u = ((i as f64) + random_u) / ((IMAGE_WIDTH - 1) as f64);
                 let v = ((j as f64) + random_v) / ((IMAGE_HEIGHT - 1) as f64);
 
-                let r = camera.get_ray(u, v);
+                let r = cam.get_ray(u, v);
                 pixel_color += ray_color(&r, &world, MAX_DEPTH);
             }
             println!("{}", pixel_color.format_color(SAMPLES_PER_PIXEL));
