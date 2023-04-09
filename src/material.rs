@@ -1,3 +1,5 @@
+use rand::Rng;
+
 use crate::vec::Vec3;
 
 use super::{hit::HitRecord, ray::Ray, vec::Color};
@@ -16,7 +18,7 @@ impl Lambertian {
 }
 
 impl Scatter for Lambertian {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
+    fn scatter(&self, _r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
         let mut scatter_direction = rec.normal + Vec3::random_in_unit_sphere().normalized();
         if scatter_direction.near_zero() {
             scatter_direction = rec.normal;
@@ -61,6 +63,18 @@ impl Dielectric {
             ir: index_of_refraction,
         }
     }
+    //计算反射的比例
+    fn reflectance(cosine: f64, ref_idx: f64) -> f64 {
+        // Use Schlick's approximation for reflectance
+        // R(theta) = R0 + (1 - R0) * (1 - cos(theta))^5
+        //
+        //  R(theta) 是入射光线角度 theta 处的反射比例。
+        //  R0 是在垂直入射（即 theta = 0）时的反射比例。
+        //  cos(theta) 是入射光线与法线之间的角度的余弦值。
+
+        let r0 = ((1.0 - ref_idx) / (1.0 + ref_idx)).powi(2);
+        r0 + (1.0 - r0) * (1.0 - cosine).powi(5)
+    }
 }
 
 impl Scatter for Dielectric {
@@ -75,9 +89,15 @@ impl Scatter for Dielectric {
         let cos_theta = ((-1.0) * unit_direction).dot(rec.normal).min(1.0);
         let sin_theta = (1.0 - cos_theta.powi(2)).sqrt();
 
-        let direction = if refraction_ratio * sin_theta > 1.0 {
+        let mut rng = rand::thread_rng();
+        let cannot_refract = refraction_ratio * sin_theta > 1.0;
+        let will_reflect = rng.gen::<f64>() < Self::reflectance(cos_theta, refraction_ratio);
+
+        let direction = if cannot_refract || will_reflect {
+            //反射（Reflection）
             unit_direction.reflect(rec.normal)
         } else {
+            //折射（Refraction）
             unit_direction.refract(rec.normal, refraction_ratio)
         };
 
