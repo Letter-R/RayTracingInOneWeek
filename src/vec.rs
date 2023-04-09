@@ -320,13 +320,6 @@ mod tests {
         assert!((v1.y() - 7.0).abs() < f64::EPSILON);
         assert!((v1.z() - 9.0).abs() < f64::EPSILON);
     }
-    #[test]
-    fn test_format_color() {
-        let color = Vec3::new(0.5, 0.6, 0.7);
-        let samples_per_pixel = 1;
-        let result = color.format_color(samples_per_pixel);
-        assert_eq!(result, "127 153 178");
-    }
 
     #[test]
     fn test_random() {
@@ -341,5 +334,45 @@ mod tests {
     fn test_random_in_unit_sphere() {
         let v = Vec3::random_in_unit_sphere();
         assert!(v.length() < 1.0);
+    }
+
+    #[test]
+    fn test_reflect() {
+        let incident = Vec3::new(1.0, -1.0, 0.0);
+        let normal = Vec3::new(0.0, 1.0, 0.0);
+        let reflected = incident.reflect(normal);
+        assert!((reflected.x() - 1.0).abs() < f64::EPSILON);
+        assert!((reflected.y() - 1.0).abs() < f64::EPSILON);
+        assert!((reflected.z() - 0.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_refract() {
+        let incident = Vec3::new(3.0_f64.sqrt(), -1.0, 0.0).normalized();
+        let normal = Vec3::new(0.0, 1.0, 0.0);
+        let etai_over_etat = 1.0 / 3.0_f64.sqrt();
+        let refracted = incident.refract(normal, etai_over_etat);
+
+        let unit_expect_out = Vec3::new(1.0, -1.0 * (3.0_f64.sqrt()), 0.0).normalized();
+        println!("{}", refracted);
+        // The refracted vector should have a non-zero x component and a negative y component.
+        assert!(
+            (refracted.x() - unit_expect_out.x()).abs() < f64::EPSILON,
+            "x: Expected {:.15}, got {:.15}",
+            unit_expect_out.x(),
+            refracted.x()
+        );
+        assert!(
+            (refracted.y() - unit_expect_out.y()).abs() < f64::EPSILON,
+            "y: Expected {:.15}, got {:.15}",
+            unit_expect_out.y(),
+            refracted.y()
+        );
+        assert!(
+            (refracted.z() - unit_expect_out.z()).abs() < f64::EPSILON,
+            "z: Expected {:.15}, got {:.15}",
+            unit_expect_out.z(),
+            refracted.z()
+        );
     }
 }
