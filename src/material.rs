@@ -4,7 +4,7 @@ use crate::vec::Vec3;
 
 use super::{hit::HitRecord, ray::Ray, vec::Color};
 
-pub trait Scatter {
+pub trait Scatter: Sync + Send {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)>;
 }
 
@@ -19,11 +19,13 @@ impl Lambertian {
 
 impl Scatter for Lambertian {
     fn scatter(&self, _r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
-        let mut scatter_direction = rec.normal + Vec3::random_in_unit_sphere().normalized();
-        if scatter_direction.near_zero() {
-            scatter_direction = rec.normal;
-        }
-        let scattered = Ray::new(rec.p, scatter_direction);
+        let target = rec.p + rec.normal + Vec3::random_in_unit_sphere();
+        let scattered = Ray::new(rec.p, target - rec.p);
+        //let mut scatter_direction = rec.normal + Vec3::random_in_unit_sphere().normalized();
+        // if scatter_direction.near_zero() {
+        //     scatter_direction = rec.normal;
+        // }
+        // let scattered = Ray::new(rec.p, scatter_direction);
         Some((self.albedo, scattered))
     }
 }
@@ -35,16 +37,16 @@ pub struct Metal {
 
 impl Metal {
     pub fn new(a: Color, f: f64) -> Metal {
-        Metal { albedo: a, fuzz: f }
+        Metal {
+            albedo: a,
+            fuzz: if f < 1.0 { f } else { 1.0 },
+        }
     }
 }
 impl Scatter for Metal {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
-        let reflected_direction = r_in.direction().reflect(rec.normal).normalized();
-        let scattered = Ray::new(
-            rec.p,
-            reflected_direction + self.fuzz * Vec3::random_in_unit_sphere(),
-        );
+        let reflected = r_in.direction().reflect(rec.normal);
+        let scattered = Ray::new(rec.p, reflected + self.fuzz * Vec3::random_in_unit_sphere());
 
         if scattered.direction().dot(rec.normal) > 0.0 {
             Some((self.albedo, scattered))

@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::material::Scatter;
 
@@ -9,11 +9,11 @@ use super::vec::{Point3, Vec3};
 pub struct Sphere {
     center: Point3,
     radius: f64,
-    material: Rc<dyn Scatter>,
+    material: Arc<dyn Scatter>,
 }
 
 impl Sphere {
-    pub fn new(cen: Point3, r: f64, m: Rc<dyn Scatter>) -> Sphere {
+    pub fn new(cen: Point3, r: f64, m: Arc<dyn Scatter>) -> Sphere {
         Sphere {
             center: cen,
             radius: r,
@@ -62,7 +62,7 @@ impl Hit for Sphere {
                 front_face: false,
                 material: self.material.clone(),
             };
-            rec.set_face_normal(ray, (rec.p - self.center).normalized());
+            rec.set_face_normal(ray, ((rec.p - self.center) / self.radius).normalized());
             return Some(rec);
         }
         //0 root，不相交

@@ -9,6 +9,8 @@ pub struct Camera {
 }
 
 impl Camera {
+    /// vfov：垂直视场角
+    /// aspect_ratio：长宽比
     pub fn new(
         lookfrom: Point3,
         lookat: Point3,
@@ -16,8 +18,6 @@ impl Camera {
         vfov: f64,
         aspect_ratio: f64,
     ) -> Camera {
-        /// vfov：垂直视场角
-        /// aspect_ratio：长宽比
         const FOCAL_LENGTH: f64 = 1.0;
 
         // Vertical field-of-view in degrees
